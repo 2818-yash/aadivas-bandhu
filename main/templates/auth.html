@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/signup.css' %}">
+
+{% if messages %}
+<div class="alert-container">
+  {% for message in messages %}
+    <div class="alert 
+      {% if message.tags == 'success' %}alert-success
+      {% elif message.tags == 'error' %}alert-error
+      {% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="container">
+
+  <!-- LOGIN -->
+  <div class="form-section">
+    <h2>Login</h2>
+    <form method="POST" action="{% url 'login_user' %}">{% csrf_token %}
+      <label>Username</label><input type="text" name="username" required>
+      <label>Password</label><input type="password" name="password" required>
+      <button type="submit">Login</button>
+      <a href="{% url 'password_reset' %}" style="float:right; font-size:14px; margin-top:8px;">
+  Forgot Password?
+</a>
+    </form>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="form-section" style="border-left:2px solid rgba(255,255,255,0.4);">
+    <h2>New user ? Create Account</h2>
+    <form method="POST" action="{% url 'register_user' %}">{% csrf_token %}
+      <label>Username</label><input type="text" name="username" required>
+      <label>Email</label><input type="email" name="email" required>
+      <label>Password</label><input type="password" name="password" required>
+      <button type="submit">Register</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

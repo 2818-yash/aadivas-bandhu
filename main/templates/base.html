@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Adivasi Bandhu | Tribal Schemes Platform{% endblock %}</title>
+
+  <meta name="theme-color" content="#006400">
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <link rel="icon" type="image/png" href="{% static 'icons/icon-72x72.png' %}">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/support_chat.css' %}">
+
+  <!-- ================= ACCESSIBILITY (GLOBAL) ================= -->
+  <style>
+    /* Auth links */
+    .auth-links {
+      position: absolute;
+      top: 12px;
+      right: 20px;
+      display: flex;
+      gap: 12px;
+      font-weight: bold;
+      z-index: 1000;
+    }
+    .auth-links a { color: white; text-decoration: none; }
+    .auth-links a:hover { text-decoration: underline; }
+
+     </style>
+</head>
+
+<body>
+
+{% if request.path != '/auth/' %}
+    {% include "components/header.html" %}
+    {% include "components/navbar.html" %}
+
+    <!-- login and logout -->
+    <div class="auth-links">
+      {% if user.is_authenticated %}
+          <span style="color:white;">Welcome, {{ user.username }}</span>
+          <a href="{% url 'logout' %}">Logout</a>
+      {% else %}
+          <a href="{% url 'auth_page' %}">Login / Register</a>
+      {% endif %}
+    </div>
+{% endif %}
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+{% if request.path != '/auth/' %}
+    {% include "components/footer.html" %}
+{% endif %}
+
+{% if user.is_authenticated and request.path != '/auth/' %}
+
+<!-- Floating Chat Button -->
+<div id="chat-fab"> 🤖 </div>
+
+<!-- Chat Box -->
+<div id="chat-box" class="hidden">
+  <div class="chat-header">
+    <span>Support Chat</span>
+    <button id="chat-close">✖</button>
+  </div>
+
+  <div id="chat-messages">
+    <div class="msg admin">Hello 👋 How can we help you?</div>
+  </div>
+
+  <div class="chat-input">
+    <input type="text" id="chat-input" placeholder="Type your message..." />
+    <button id="chat-send">Send</button>
+  </div>
+</div>
+
+<script>
+  const CURRENT_USERNAME = "{{ request.user.username }}";
+</script>
+
+<script src="{% static 'js/support_chat.js' %}"></script>
+
+{% endif %}
+
+<!-- ================= ACCESSIBILITY SCRIPT (GLOBAL) ================= -->
+<script>
+  // Apply high contrast on page load
+  (function () {
+    const enabled = localStorage.getItem("highContrast") === "true";
+    if (enabled) {
+      document.body.classList.add("high-contrast");
+    }
+  })();
+
+  // Toggle function (can be called from any page / navbar button)
+  function toggleContrast() {
+    const enabled = document.body.classList.toggle("high-contrast");
+    localStorage.setItem("highContrast", enabled);
+  }
+</script>
+
+<!-- Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- PWA SERVICE WORKER -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker
+        .register("{% static 'service-worker.js' %}")
+        .then((reg) => console.log("SW OK:", reg.scope))
+        .catch((err) => console.log("SW FAIL:", err));
+    });
+  }
+</script>
+
+</body>
+</html>
