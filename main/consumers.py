@@ -23,7 +23,7 @@ class SupportChatConsumer(WebsocketConsumer):
 
         self.accept()
 
-        # 🔹 SEND OLD MESSAGES ON CONNECT
+        # 🔹 SEND OLD MESSAGES
         admin = User.objects.filter(is_superuser=True).first()
         if admin:
             messages = SupportMessage.objects.filter(
@@ -52,7 +52,6 @@ class SupportChatConsumer(WebsocketConsumer):
         if not admin:
             return
 
-        # 🔹 SAVE MESSAGE ALWAYS (ADMIN ONLINE OR OFFLINE)
         SupportMessage.objects.create(
             sender=sender,
             receiver=admin,
