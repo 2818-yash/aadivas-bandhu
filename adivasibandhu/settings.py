@@ -9,10 +9,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-*s8zsh2%h45j5_6bdt3lj50)4g+u!e88xoovck=s9e#rn@3lsg'
 
-DEBUG = True
+DEBUG = False
 
 # ✅ Allow local + websocket
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["*"]
 
 # ------------------------------
 # APPLICATIONS
@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main',            # your existing app
+    'main',   
+    'whitenoise.runserver_nostatic',         # your existing app
 ]
 
 # ------------------------------
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -119,6 +121,8 @@ USE_TZ = True
 # STATIC FILES
 # ------------------------------
 
+
+
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
@@ -126,6 +130,8 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # ------------------------------
 # MEDIA FILES
