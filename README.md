@@ -4,6 +4,11 @@ Adivasi Bandhu is a web-based platform developed to support Adivasi (tribal) com
 
 The project focuses on digital inclusion, awareness, and accessibility for tribal people, students, women, workers, and elders.
 
+
+
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/c2de019b-2d03-45e4-ac8b-b980a07fa5db" />
+
+
 🎯 Project Objective
 
 To provide centralized information about government schemes for Adivasi communities
