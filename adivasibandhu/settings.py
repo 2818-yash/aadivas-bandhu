@@ -6,8 +6,10 @@ from pathlib import Path
 import mimetypes
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+import os
 
-SECRET_KEY = 'django-insecure-*s8zsh2%h45j5_6bdt3lj50)4g+u!e88xoovck=s9e#rn@3lsg'
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
 
 DEBUG = False
 
