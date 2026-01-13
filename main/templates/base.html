@@ -20,7 +20,6 @@
 
   <!-- ================= ACCESSIBILITY (GLOBAL) ================= -->
   <style>
-    /* Auth links */
     .auth-links {
       position: absolute;
       top: 12px;
@@ -30,95 +29,206 @@
       font-weight: bold;
       z-index: 1000;
     }
-    .auth-links a { color: white; text-decoration: none; }
-    .auth-links a:hover { text-decoration: underline; }
-
-     </style>
+    .auth-links a {
+      color: white;
+      text-decoration: none;
+    }
+    .auth-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 
 <body>
 
-{% if request.path != '/auth/' %}
-    {% include "components/header.html" %}
-    {% include "components/navbar.html" %}
+{# ================= HEADER / NAVBAR ================= #}
+{% if request.path != '/signin/' and request.path != '/signup/' %}
+  {% include "components/header.html" %}
+  {% include "components/navbar.html" %}
 
-    <!-- login and logout -->
-    <div class="auth-links">
-      {% if user.is_authenticated %}
-          <span style="color:white;">Welcome, {{ user.username }}</span>
-          <a href="{% url 'logout' %}">Logout</a>
-      {% else %}
-          <a href="{% url 'auth_page' %}">Login / Register</a>
-      {% endif %}
-    </div>
+  <div class="auth-links">
+    {% if user.is_authenticated %}
+      <div class="profile-dropdown">
+        <div class="profile-trigger" id="profileTrigger">
+          <img
+            src="{{ user.profile.profile_pic.url }}"
+            class="profile-avatar"
+            alt="Profile"
+          />
+          <span class="profile-name">Welcome {{ user.username|upper }}</span>
+        </div>
+
+        <div class="profile-menu-box" id="profileMenu">
+          <a href="#" class="profile-item">👤 My Profile</a>
+          <a href="javascript:void(0)" onclick="openAvatarModal()" class="profile-item">
+            ⚙️ Settings
+          </a>
+          <hr />
+          <a href="{% url 'logout' %}" class="profile-item logout">
+            🚪 Logout
+          </a>
+        </div>
+      </div>
+    {% else %}
+      <a href="{% url 'signin' %}">Login</a>
+      <a href="{% url 'signup' %}">Register</a>
+    {% endif %}
+  </div>
 {% endif %}
 
 <main>
   {% block content %}{% endblock %}
 </main>
 
-{% if request.path != '/auth/' %}
-    {% include "components/footer.html" %}
+{# ================= FOOTER ================= #}
+{% if request.path != '/signin/' and request.path != '/signup/' %}
+  {% include "components/footer.html" %}
 {% endif %}
 
-{% if user.is_authenticated and request.path != '/auth/' %}
+{# ================= SUPPORT CHAT ================= #}
+{% if user.is_authenticated and request.path != '/signin/' and request.path != '/signup/' %}
 
-<!-- Floating Chat Button -->
-<div id="chat-fab"> 🤖 </div>
+<div id="chat-overlay" class="hidden"></div>
 
-<!-- Chat Box -->
+<div id="chat-fab">
+  📧
+  <span id="chat-unread-badge" class="unread-badge hidden">0</span>
+</div>
+
 <div id="chat-box" class="hidden">
   <div class="chat-header">
     <span>Support Chat</span>
-    <button id="chat-close">✖</button>
+    <button id="chat-close">Close</button>
   </div>
 
-  <div id="chat-messages">
+  {% if user.is_superuser %}
+  <div class="admin-chat-container">
+    <div class="admin-left">
+      <input type="text" id="user-search" class="user-search" placeholder="Search user..." />
+      <div id="admin-user-list" class="admin-user-list"></div>
+    </div>
+
+    <div class="admin-right">
+      <div id="chat-messages" class="chat-messages">
+        <div class="msg admin">Select a user from the left to view chat</div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chat-input" placeholder="Type your message..." />
+        <button id="chat-send">Send</button>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div id="chat-messages" class="chat-messages">
     <div class="msg admin">Hello 👋 How can we help you?</div>
   </div>
-
   <div class="chat-input">
     <input type="text" id="chat-input" placeholder="Type your message..." />
     <button id="chat-send">Send</button>
   </div>
+  {% endif %}
 </div>
 
 <script>
   const CURRENT_USERNAME = "{{ request.user.username }}";
 </script>
-
 <script src="{% static 'js/support_chat.js' %}"></script>
-
 {% endif %}
 
-<!-- ================= ACCESSIBILITY SCRIPT (GLOBAL) ================= -->
+{# ================= AVATAR MODAL ================= #}
+<div id="avatarModal" class="avatar-modal hidden">
+  <div class="avatar-card">
+    <h3>Select Your Avatar</h3>
+    <div class="avatar-grid">
+      {% for i in "12345678910"|make_list %}
+        <img
+          src="/media/default_avatars/avatar{{ forloop.counter }}.png"
+          class="avatar-option"
+          data-avatar="avatar{{ forloop.counter }}.png"
+        />
+      {% endfor %}
+    </div>
+    <div class="avatar-actions">
+      <button onclick="closeAvatarModal()">Cancel</button>
+      <button onclick="saveAvatar()" class="primary">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Apply high contrast on page load
+  let selectedAvatar = null;
+
+  function openAvatarModal() {
+    document.getElementById("avatarModal").classList.remove("hidden");
+  }
+
+  function closeAvatarModal() {
+    document.getElementById("avatarModal").classList.add("hidden");
+  }
+
+  document.querySelectorAll(".avatar-option").forEach(img => {
+    img.addEventListener("click", () => {
+      document.querySelectorAll(".avatar-option").forEach(i => i.classList.remove("selected"));
+      img.classList.add("selected");
+      selectedAvatar = img.dataset.avatar;
+    });
+  });
+
+  function saveAvatar() {
+    if (!selectedAvatar) {
+      alert("Please select an avatar");
+      return;
+    }
+
+    fetch("/update-avatar/", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ avatar: selectedAvatar })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) location.reload();
+    });
+  }
+</script>
+
+<script>
+  document.addEventListener("click", function (e) {
+    const trigger = document.getElementById("profileTrigger");
+    const menu = document.getElementById("profileMenu");
+    if (!trigger || !menu) return;
+    if (trigger.contains(e.target)) {
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    } else {
+      menu.style.display = "none";
+    }
+  });
+</script>
+
+<script>
   (function () {
     const enabled = localStorage.getItem("highContrast") === "true";
-    if (enabled) {
-      document.body.classList.add("high-contrast");
-    }
+    if (enabled) document.body.classList.add("high-contrast");
   })();
 
-  // Toggle function (can be called from any page / navbar button)
   function toggleContrast() {
     const enabled = document.body.classList.toggle("high-contrast");
     localStorage.setItem("highContrast", enabled);
   }
 </script>
 
-<!-- Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- PWA SERVICE WORKER -->
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker
         .register("{% static 'service-worker.js' %}")
-        .then((reg) => console.log("SW OK:", reg.scope))
-        .catch((err) => console.log("SW FAIL:", err));
+        .then(reg => console.log("SW OK:", reg.scope))
+        .catch(err => console.log("SW FAIL:", err));
     });
   }
 </script>

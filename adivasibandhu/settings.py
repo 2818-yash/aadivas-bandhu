@@ -1,20 +1,17 @@
-"""
-Django settings for adivasibandhu project.
-"""
-
 from pathlib import Path
 import mimetypes
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-import os
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
-
+SECRET_KEY = 'django-insecure-*s8zsh2%h45j5_6bdt3lj50)4g+u!e88xoovck=s9e#rn@3lsg'
 
 DEBUG = False
 
-# ✅ Allow local + websocket
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '192.168.1.55',
+]
 
 # ------------------------------
 # APPLICATIONS
@@ -22,15 +19,14 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'daphne',
-    'channels', 
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main',   
-    'whitenoise.runserver_nostatic',         # your existing app
+    'main',
 ]
 
 # ------------------------------
@@ -39,7 +35,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -70,21 +65,19 @@ TEMPLATES = [
 ]
 
 # ------------------------------
-# ASGI + WSGI (IMPORTANT)
+# ASGI + WSGI
 # ------------------------------
 
-# ❌ OLD (do not remove, keep for admin / normal HTTP)
-WSGI_APPLICATION = "adivasibandhu.wsgi.application"
-ASGI_APPLICATION = "adivasibandhu.asgi.application"
-
+WSGI_APPLICATION = 'adivasibandhu.wsgi.application'
+ASGI_APPLICATION = 'adivasibandhu.asgi.application'
 
 # ------------------------------
-# CHANNEL LAYERS (DEV MODE)
+# CHANNELS (DEV)
 # ------------------------------
 
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     }
 }
 
@@ -120,27 +113,23 @@ USE_I18N = True
 USE_TZ = True
 
 # ------------------------------
-# STATIC FILES
+# STATIC FILES (FIXED)
 # ------------------------------
-
-
 
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "main/static",
+    BASE_DIR / 'main/static',
 ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
+STATIC_ROOT = r'C:\Users\divya\OneDrive\Desktop\ADIVASI-DJANGO-APP\adivasibandhu\static'
 
 # ------------------------------
-# MEDIA FILES
+# MEDIA FILES (FIXED)
 # ------------------------------
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = r'C:\Users\divya\OneDrive\Desktop\ADIVASI-DJANGO-APP\adivasibandhu\media'
 
 # ------------------------------
 # DEFAULTS
@@ -148,10 +137,32 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # ------------------------------
-# PWA / MIME FIX
+# EMAIL CONFIG
 # ------------------------------
 
-mimetypes.add_type("application/manifest+json", ".json", True)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'divyanshrajshrivastava@gmail.com'
+EMAIL_HOST_PASSWORD = 'dyrzlzdbuvwqbeus'
+DEFAULT_FROM_EMAIL = 'divyanshrajshrivastava@gmail.com'
+
+# ------------------------------
+# CSRF / PROXY
+# ------------------------------
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://192.168.1.55:9001',
+]
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+
+# ------------------------------
+# PWA MIME FIX
+# ------------------------------
+
+mimetypes.add_type('application/manifest+json', '.json', True)

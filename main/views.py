@@ -1,33 +1,40 @@
 from django.shortcuts import render, redirect
-from .models import Contacts, HelpQuery   
+from .models import Contacts, HelpQuery
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+import json
+import os
+from django.http import JsonResponse
+from django.conf import settings
+from .models import Profile
 
 
-# homepage— redirect to auth if user not logged in
+# =========================
+# PROTECTED PAGES
+# =========================
+
 def index(request):
     if not request.user.is_authenticated:
-        return redirect("auth_page")
+        return redirect("signin")
     return render(request, "pages/index.html")
 
 
 def apply(request):
     if not request.user.is_authenticated:
-        return redirect("auth_page")
+        return redirect("signin")
     return render(request, "pages/apply.html")
 
 
 def scheme(request):
     if not request.user.is_authenticated:
-        return redirect("auth_page")
+        return redirect("signin")
     return render(request, "pages/scheme.html")
-
 
 
 def help_page(request):
     if not request.user.is_authenticated:
-        return redirect("auth_page")
+        return redirect("signin")
 
     if request.method == "POST":
         question = request.POST.get("question")
@@ -47,17 +54,13 @@ def help_page(request):
 
 def contact(request):
     if not request.user.is_authenticated:
-        return redirect("auth_page")
+        return redirect("signin")
 
     if request.method == "POST":
-        print("POST:", request.POST)
-
         name = request.POST.get("name")
         email = request.POST.get("email")
         subject = request.POST.get("subject")
         message = request.POST.get("message")
-
-        print("MESSAGE RECEIVED:", message)
 
         Contacts.objects.create(
             name=name,
@@ -71,9 +74,25 @@ def contact(request):
     return render(request, "pages/contact.html")
 
 
-def auth_page(request):
-    return render(request, "auth.html")
+# =========================
+# AUTH PAGES (NEW)
+# =========================
 
+def signin_page(request):
+    if request.user.is_authenticated:
+        return redirect("index")
+    return render(request, "signin.html")
+
+
+def signup_page(request):
+    if request.user.is_authenticated:
+        return redirect("index")
+    return render(request, "signup.html")
+
+
+# =========================
+# AUTH ACTIONS (UNCHANGED LOGIC)
+# =========================
 
 def register_user(request):
     if request.method == "POST":
@@ -83,14 +102,33 @@ def register_user(request):
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
-            return redirect("auth_page")
+            return redirect("signup")
 
-        user = User.objects.create_user(username=username, email=email, password=password)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
         user.save()
-        messages.success(request, "Registration successful! Please login.")
-        return redirect("auth_page")
 
-    return redirect("auth_page")
+        # avatar logic (UNCHANGED)
+        profile = Profile.objects.create(user=user)
+
+        avatar_dir = os.path.join(settings.MEDIA_ROOT, "default_avatars")
+        avatars = os.listdir(avatar_dir)
+
+        if avatars:
+            import random
+            avatar_name = random.choice(avatars)
+            avatar_path = os.path.join(avatar_dir, avatar_name)
+
+            with open(avatar_path, "rb") as f:
+                profile.profile_pic.save(avatar_name, f, save=True)
+
+        messages.success(request, "Registration successful! Please login.")
+        return redirect("signin")
+
+    return redirect("signup")
 
 
 def login_user(request):
@@ -105,11 +143,37 @@ def login_user(request):
             return redirect("index")
         else:
             messages.error(request, "Invalid username or password")
-            return redirect("auth_page")
+            return redirect("signin")
 
-    return redirect("auth_page")
+    return redirect("signin")
 
 
 def logout_user(request):
     logout(request)
-    return redirect("auth_page")
+    return redirect("signin")
+
+
+# =========================
+# AVATAR UPDATE (UNCHANGED)
+# =========================
+
+def update_avatar(request):
+    if request.method == "POST" and request.user.is_authenticated:
+        data = json.loads(request.body)
+        avatar_name = data.get("avatar")
+
+        avatar_path = os.path.join(
+            settings.MEDIA_ROOT,
+            "default_avatars",
+            avatar_name
+        )
+
+        if os.path.exists(avatar_path):
+            profile = request.user.profile
+
+            with open(avatar_path, "rb") as f:
+                profile.profile_pic.save(avatar_name, f, save=True)
+
+            return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False})
